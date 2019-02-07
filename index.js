@@ -3,9 +3,7 @@ const Module = require('module')
 const _ = require('lodash')
 const path = require('path')
 
-module.exports = function generateRequireForUserCode (scopedDirs, options) {
-  options = _.defaults((options || {}), {autoDeleteCache: false})
-
+module.exports = function generateRequireForUserCode (scopedDirs, {autoDeleteCache = false} = {}) {
   const forExtensions = Object.keys(require.extensions)
   const uniqueIdForThisScopedRequire = _.uniqueId('__dontExtendThisScopedRequire')
   scopedDirs = _.map(scopedDirs, function (dir) { return path.resolve(dir) })
@@ -57,7 +55,7 @@ module.exports = function generateRequireForUserCode (scopedDirs, options) {
   }
 
   return {
-    require: !options.autoDeleteCache
+    require: !autoDeleteCache
       ? baseModule.require.bind(baseModule)
       : function (path) {
         const moduleExports = baseModule.require.apply(baseModule, arguments)
@@ -81,7 +79,7 @@ module.exports = function generateRequireForUserCode (scopedDirs, options) {
       module._compile(code, module.filename || 'filename-to-make-node6-happy')
 
       baseModule.children.push(module)
-      if (options.autoDeleteCache) { deleteModuleFromCache(baseModule) } else if (filename && !options.autoDeleteCache) { Module._cache[filename] = module }
+      if (autoDeleteCache) { deleteModuleFromCache(baseModule) } else if (filename && !autoDeleteCache) { Module._cache[filename] = module }
 
       return module.exports
     }
