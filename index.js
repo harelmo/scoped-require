@@ -6,19 +6,19 @@ const path = require('path')
 module.exports = function generateRequireForUserCode (scopedDirs, {autoDeleteCache = false} = {}) {
   const forExtensions = Object.keys(require.extensions)
   const uniqueIdForThisScopedRequire = uniqueId('__dontExtendThisScopedRequire')
-  scopedDirs = scopedDirs.map(dir => path.resolve(dir))
+  const resolvedScopedDirs = scopedDirs.map(dir => path.resolve(dir))
 
   const baseModule = require('./lib/stubmodule-that-does-the-require')
   // so that it can be re-used again with another scoped-dir, I delete it from the cache
   delete Module._cache[baseModule.id]
   // make relative paths work when requiring
-  baseModule.filename = path.resolve(scopedDirs[0], 'stubmodule-that-does-the-require.js')
+  baseModule.filename = path.resolve(resolvedScopedDirs[0], 'stubmodule-that-does-the-require.js')
   baseModule.__scopedRequireModule = true
 
-  const inUserCodeDirs = (modulePath) => scopedDirs.some(userCodeDir => modulePath.indexOf(userCodeDir) >= 0)
+  const inUserCodeDirs = (modulePath) => resolvedScopedDirs.some(userCodeDir => modulePath.indexOf(userCodeDir) >= 0)
 
   function adjustPaths (m) {
-    m.paths = m.paths.concat(scopedDirs).filter(modulePath => inUserCodeDirs(modulePath))
+    m.paths = m.paths.concat(resolvedScopedDirs).filter(modulePath => inUserCodeDirs(modulePath))
   }
 
   adjustPaths(baseModule)
@@ -60,7 +60,7 @@ module.exports = function generateRequireForUserCode (scopedDirs, {autoDeleteCac
 
         return moduleExports
       },
-    scopedDirs: scopedDirs,
+    scopedDirs: resolvedScopedDirs,
     clearCache: function () {
       deleteModuleFromCache(baseModule)
     },
