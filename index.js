@@ -60,21 +60,24 @@ module.exports = function generateRequireForUserCode (scopedDirs, {autoDeleteCac
         return moduleExports
       },
     scopedDirs: resolvedScopedDirs,
-    clearCache: function () {
-      deleteModuleFromCache(baseModule)
-    },
-    loadCodeAsModule: function (code, filename) {
-      if (filename && Module._cache[filename]) { return Module._cache[filename] }
+    clearCache: () => deleteModuleFromCache(baseModule),
+    loadCodeAsModule: (code, filename) => {
+      if (filename && Module._cache[filename]) {
+        return Module._cache[filename]
+      }
 
       const module = new Module(filename, baseModule)
       module.filename = filename
       module.paths = baseModule.paths
       module.__scopedRequireModule = true
-
       module._compile(code, module.filename || 'filename-to-make-node6-happy')
-
       baseModule.children.push(module)
-      if (autoDeleteCache) { deleteModuleFromCache(baseModule) } else if (filename && !autoDeleteCache) { Module._cache[filename] = module }
+
+      if (autoDeleteCache) {
+        deleteModuleFromCache(baseModule)
+      } else if (filename && !autoDeleteCache) {
+        Module._cache[filename] = module
+      }
 
       return module.exports
     }
