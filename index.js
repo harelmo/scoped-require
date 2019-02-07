@@ -1,12 +1,12 @@
 'use strict'
 const Module = require('module')
-const _ = require('lodash')
+const {uniqueId} = require('lodash')
 const path = require('path')
 
 module.exports = function generateRequireForUserCode (scopedDirs, {autoDeleteCache = false} = {}) {
   const forExtensions = Object.keys(require.extensions)
-  const uniqueIdForThisScopedRequire = _.uniqueId('__dontExtendThisScopedRequire')
-  scopedDirs = _.map(scopedDirs, function (dir) { return path.resolve(dir) })
+  const uniqueIdForThisScopedRequire = uniqueId('__dontExtendThisScopedRequire')
+  scopedDirs = scopedDirs.map(dir => path.resolve(dir))
 
   const baseModule = require('./lib/stubmodule-that-does-the-require')
   // so that it can be re-used again with another scoped-dir, I delete it from the cache
@@ -15,17 +15,15 @@ module.exports = function generateRequireForUserCode (scopedDirs, {autoDeleteCac
   baseModule.filename = path.resolve(scopedDirs[0], 'stubmodule-that-does-the-require.js')
   baseModule.__scopedRequireModule = true
 
-  function inUserCodeDirs (modulePath) {
-    return _.some(scopedDirs, function (userCodeDir) { return modulePath.indexOf(userCodeDir) >= 0 })
-  }
+  const inUserCodeDirs = (modulePath) => scopedDirs.some(userCodeDir => modulePath.indexOf(userCodeDir) >= 0)
 
   function adjustPaths (m) {
-    m.paths = _.filter(m.paths.concat(scopedDirs), function (modulePath) { return inUserCodeDirs(modulePath) })
+    m.paths = m.paths.concat(scopedDirs).filter(modulePath => inUserCodeDirs(modulePath))
   }
 
   adjustPaths(baseModule)
 
-  _.forEach(forExtensions, function (ext) {
+  forExtensions.forEach(ext => {
     const original = require.extensions[ext]
     if (original && original[uniqueIdForThisScopedRequire]) { return }
 
@@ -49,9 +47,7 @@ module.exports = function generateRequireForUserCode (scopedDirs, {autoDeleteCac
     delete Module._cache[m.id]
     const moduleChildren = m.children
     m.children = []
-    _.forEach(moduleChildren, function (subModule) {
-      deleteModuleFromCache(subModule)
-    })
+    moduleChildren.forEach(subModule => deleteModuleFromCache(subModule))
   }
 
   return {
