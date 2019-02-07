@@ -1,4 +1,3 @@
-'use strict'
 const Module = require('module')
 const {uniqueId} = require('lodash')
 const path = require('path')
