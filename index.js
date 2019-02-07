@@ -14,7 +14,7 @@ module.exports = function generateRequireForUserCode (scopedDirs, {autoDeleteCac
   baseModule.filename = path.resolve(resolvedScopedDirs[0], 'stubmodule-that-does-the-require.js')
   baseModule.__scopedRequireModule = true
 
-  const inUserCodeDirs = (modulePath) => resolvedScopedDirs.some(userCodeDir => modulePath.indexOf(userCodeDir) >= 0)
+  const inUserCodeDirs = (modulePath) => resolvedScopedDirs.some(userCodeDir => modulePath.includes(userCodeDir))
 
   function adjustPaths (m) {
     m.paths = m.paths.concat(resolvedScopedDirs).filter(modulePath => inUserCodeDirs(modulePath))
